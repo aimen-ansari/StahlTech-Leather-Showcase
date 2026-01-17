@@ -1,73 +1,22 @@
-# Welcome to your Lovable project
+Below is a summary of the technical architecture and the logic behind our implementation:
 
-## Project info
+1. What We Used
+We built a modern tech stack focused on high performance and "Artisan Crafted" aesthetics:
+Frontend: React.js with Tailwind CSS for the luxury dark theme and Framer Motion for smooth, high-end animations.
+Backend-as-a-Service: Supabase for the PostgreSQL database, Authentication (Admin/Public roles), and Storage for product images.
+Routing: react-router-dom to manage the seamless transition between the Home, About, Contact, and Admin pages.
+Icons: Lucide-React for minimalist, themed iconography across the dashboard and contact sections.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+2. Why We Used It
+Each choice was made to solve specific technical challenges:
+Supabase RLS (Row Level Security): We used this to ensure that only you (the Admin) can add or delete products, while your customers can only view them.
+React Context API: We implemented ProductContext to ensure that when you add a product in the Admin Console, it instantly updates the storefront without a page reload.
+AbortController: We added this to fix "AbortErrors" caused by React's Strict Mode, ensuring your database connection remains stable during fast navigation.
+Local Video: We utilized local video on the About page to showcase your Sialkot craftsmanship without relying on third-party players like YouTube, maintaining a "premium" ad-free look.
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+3. How We Implemented It
+We followed a systematic workflow to move from errors to a live site:
+Schema Synchronization: We updated the Supabase database using SQL commands to include color and size columns so they matched your React form fields.
+Security Configuration: We verified that your user ID was assigned the admin role in the profiles table to grant you access to the Masterpiece creator.
+Image Pipeline: We configured the Admin Dashboard to take a local file, upload it to the Supabase "product-images" bucket, and then save that public URL into the product's database row.
+Universal Navigation: We updated the App.jsx and Header.jsx to link the new About, Contact, and Login pages into a single, cohesive user journey.
