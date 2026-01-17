@@ -38,7 +38,7 @@ export default function Index() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
         <p className="font-serif tracking-widest text-muted-foreground uppercase text-xs">
-          Loading Collection
+          Loading ... Please Wait!
         </p>
       </div>
     );
