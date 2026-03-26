@@ -127,7 +127,9 @@ export default function Footer() {
               <img
                 src={AimenSignature}
                 alt="Aimen Ansari Signature"
-                className="h-10 w-auto object-contain brightness-110 contrast-125 filter"
+                className="object-contain brightness-110 contrast-125 filter"
+              width={50}
+             
               />
             </a>
           </div>
