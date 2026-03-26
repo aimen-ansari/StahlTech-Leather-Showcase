@@ -125,7 +125,7 @@ export default function Footer() {
               className="group block transition-opacity hover:opacity-80"
             >
               <img
-                src="/src/assets/AimenSignature.png"
+                src={AimenSignature}
                 alt="Aimen Ansari Signature"
                 className="h-10 w-auto object-contain brightness-110 contrast-125 filter"
               />
