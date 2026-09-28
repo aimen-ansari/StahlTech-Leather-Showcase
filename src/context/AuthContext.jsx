@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
   const logout = async () => supabase.auth.signOut();
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, isAuthenticated: Boolean(user), loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

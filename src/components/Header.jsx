@@ -6,141 +6,191 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const userLabel = user?.name || user?.email || 'User';
+  const userInitial = userLabel.charAt(0).toUpperCase();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    const { error } = await logout();
+    if (!error) {
+      navigate('/login');
+    }
+    setIsMenuOpen(false);
   };
+
+  const navLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Collections', href: '/#collection' },
+    { label: 'About', href: '/about' },
+    { label: 'Custom Order', href: '/custom-manufacture' },
+    { label: 'Contact', href: '/contact' },
+  ];
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="absolute left-0 right-0 top-0 z-50"
+      className="relative z-50 border-b border-white/10 bg-black/20 backdrop-blur-md transition-all duration-300"
     >
-      <div className="container mx-auto flex items-center justify-between px-4 py-6">
-        {/* Logo */}
-        <Link to="/" className="font-serif text-2xl text-foreground">
-          <span className="text-primary">Stahl</span> Tech 
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-8 md:flex">
-         
-          {/**<Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Collection
-          </Link>
-          <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Craft
-          </Link>**/}
-
-           <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Home
-          </Link>
-          
-
-          <Link to="/about" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            About
-          </Link>
-
-          <Link to="/contact" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Contact Us
-          </Link>
-          
-          {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
-                >
-                  <Shield className="h-4 w-4" />
-                  Dashboard
-                </Link>
-              )}
-              <div className="flex items-center gap-3 border-l border-border pl-4">
-                <span className="text-sm text-muted-foreground">
-                  {user?.name}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <Link
-              to="/login"
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Link 
+              to="/" 
+              className="font-serif font-bold text-3xl bg-gradient-to-r from-amber-300 via-amber-200 to-orange-300 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
             >
-              <User className="h-4 w-4" />
-              Login
+              Stahl <span className="text-white">Tech</span>
             </Link>
-          )}
-        </nav>
+          </motion.div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="p-2 md:hidden"
-        >
-          {isMenuOpen ? (
-            <X className="h-6 w-6 text-foreground" />
-          ) : (
-            <Menu className="h-6 w-6 text-foreground" />
-          )}
-        </button>
-      </div>
+          {/* Desktop Navigation - Centered Capsule */}
+          <nav className="hidden lg:flex items-center gap-1 px-2 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all duration-300 relative group"
+              >
+                {link.label}
+                <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-amber-300 to-orange-400 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+              </Link>
+            ))}
+          </nav>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="border-t border-border bg-background md:hidden"
-        >
-          <nav className="container mx-auto flex flex-col gap-4 px-4 py-6">
-            <Link to="/" className="text-sm font-medium text-foreground">
-              Collection
-            </Link>
-            <Link to="/" className="text-sm font-medium text-foreground">
-              Craft
-            </Link>
-            <Link to="/" className="text-sm font-medium text-foreground">
-              About
-            </Link>
-            
-            {isAuthenticated ? (
-              <>
-                {isAdmin && (
-                  <Link to="/admin" className="flex items-center gap-2 text-sm font-medium text-primary">
-                    <Shield className="h-4 w-4" />
-                    Dashboard
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-3">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  {isAuthenticated && (
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full hover:shadow-lg hover:shadow-amber-500/40 transition-all duration-300 group"
+                      >
+                        <Shield className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+                        Dashboard
+                      </Link>
+                    </motion.div>
+                  )}
+                  
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-amber-300 to-orange-400 flex items-center justify-center text-xs font-bold text-black">
+                      {userInitial}
+                    </div>
+                    <span className="text-xs text-white/80 max-w-[100px] truncate">
+                      {userLabel.split(' ')[0]}
+                    </span>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    onClick={handleLogout}
+                    className="p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-all duration-300"
+                    title="Logout"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </motion.button>
+                </div>
+              ) : (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 px-6 py-2 text-sm font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full hover:shadow-lg hover:shadow-amber-500/40 transition-all duration-300 group"
+                  >
+                    <User className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+                    Login
+                  </Link>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-all duration-300"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="lg:hidden mt-4 overflow-hidden"
+          >
+            <nav className="flex flex-col gap-2 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="px-4 py-3 text-sm font-medium text-white/80 hover:text-white hover:bg-white/15 rounded-lg transition-all duration-300"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              
+              <div className="border-t border-white/10 pt-2">
+                {isAuthenticated ? (
+                  <>
+                    {isAuthenticated && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-white/80 hover:text-white hover:bg-white/15 rounded-lg transition-all duration-300"
+                      >
+                        <Shield className="h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-white/80 hover:text-white hover:bg-white/15 rounded-lg transition-all duration-300"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-lg hover:shadow-lg transition-all duration-300 w-full"
+                  >
+                    <User className="h-4 w-4" />
+                    Login
                   </Link>
                 )}
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 text-sm text-muted-foreground"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/login" className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <User className="h-4 w-4" />
-                Login
-              </Link>
-            )}
-          </nav>
-        </motion.div>
-      )}
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </div>
     </motion.header>
   );
 }
