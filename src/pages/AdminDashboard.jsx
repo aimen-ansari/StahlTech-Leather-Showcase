@@ -143,8 +143,8 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => (
             <div key={product.id} className="group bg-card border border-border rounded-sm overflow-hidden transition-all hover:border-primary/40 shadow-sm">
-              <div className="aspect-[4/3] relative overflow-hidden bg-muted">
-                <img src={product.image_url || '/placeholder.svg'} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+              <div className="aspect-[3/4] relative overflow-hidden bg-muted">
+                <img src={product.image_url || '/placeholder.svg'} alt={product.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button onClick={() => handleOpenForm(product)} className="p-2 bg-background/90 rounded-full hover:text-primary"><Edit size={18} /></button>
                   <button onClick={() => deleteProduct(product.id)} className="p-2 bg-background/90 rounded-full hover:text-destructive"><Trash2 size={18} /></button>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
                     <label className="text-[10px] uppercase tracking-widest text-muted-foreground block">Product Visuals</label>
                     <div className="h-64 w-full border border-dashed border-border rounded-sm flex flex-col items-center justify-center relative overflow-hidden bg-muted/30">
                       {imageFile || formData.image_url ? (
-                        <img src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url} className="absolute inset-0 w-full h-full object-cover" />
+                        <img src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url} alt="Product preview" className="absolute inset-0 w-full h-full object-contain" />
                       ) : (
                         <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                       )}

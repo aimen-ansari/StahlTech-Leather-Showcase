@@ -1,9 +1,48 @@
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Ruler, Palette, Tag } from 'lucide-react';
 
-// ... (variants remain the same as your provided code)
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.25 } },
+  exit: { opacity: 0, transition: { duration: 0.2 } }
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.3, ease: "easeOut", staggerChildren: 0.05 }
+  },
+  exit: { opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.2 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } }
+};
 
 export default function ProductModal({ product, isOpen, onClose }) {
+  // Lock background scroll and allow Escape-to-close while the modal is open.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!product) return null;
   const displayImage = product.image_url || "/placeholder.svg";
 
@@ -15,7 +54,9 @@ export default function ProductModal({ product, isOpen, onClose }) {
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm p-4"
+          // items-start + overflow-y-auto on the backdrop makes tall content
+          // reachable; `my-auto` on the card still centres it when it fits.
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-background/90 backdrop-blur-sm p-4"
           onClick={onClose}
         >
           <motion.div
@@ -23,22 +64,33 @@ export default function ProductModal({ product, isOpen, onClose }) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative w-full max-w-5xl overflow-hidden rounded-sm bg-card shadow-2xl"
+            className="relative my-auto w-full max-w-5xl rounded-sm bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={onClose}
-              className="absolute right-4 top-4 z-10 p-2 text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            {/* Sticky so the close control stays reachable while the modal scrolls. */}
+            <div className="sticky top-0 z-10 flex justify-end h-0 pointer-events-none">
+              <button
+                onClick={onClose}
+                aria-label="Close quick view"
+                className="pointer-events-auto translate-y-4 p-2 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <div className="grid md:grid-cols-2">
+            <div className="grid md:grid-cols-2 md:items-stretch">
               <motion.div
                 variants={itemVariants}
-                className="relative aspect-square md:aspect-auto bg-secondary/5"
+                className="relative flex items-center justify-center overflow-hidden bg-black
+                           aspect-[3/4] max-h-[70dvh] md:aspect-auto md:max-h-none md:h-full"
               >
-                <img src={displayImage} alt={product.name} className="h-full w-full object-cover" />
+                <img
+                  src={displayImage}
+                  alt={product.name}
+                  loading="eager"
+                  decoding="async"
+                  className="block max-h-full max-w-full h-auto w-auto object-contain"
+                />
               </motion.div>
 
               <div className="flex flex-col justify-center p-8 lg:p-12">

@@ -12,10 +12,14 @@ export default function ProductCard({ product, onQuickView, index }) {
       className="product-card group cursor-pointer"
       onClick={() => onQuickView(product)}
     >
-      <div className="relative overflow-hidden aspect-[4/5] bg-secondary/10">
+      <div className="relative overflow-hidden aspect-[3/4] bg-secondary/10">
         <img
           src={displayImage}
           alt={product.name}
+          loading="lazy"
+          decoding="async"
+          width={768}
+          height={1024}
           className="product-card-image w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         

@@ -140,7 +140,7 @@
   }
   
   .product-card-image {
-    @apply w-full aspect-[3/4] object-cover transition-transform duration-700 ease-out;
+    @apply w-full h-full object-cover transition-transform duration-700 ease-out;
   }
   
   .product-card:hover .product-card-image {
