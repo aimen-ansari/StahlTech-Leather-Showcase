@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ProductProvider } from "./context/ProductContext";
 import Index from "./pages/Index";
@@ -7,6 +8,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CustomManufacture from "./pages/CustomManufacture";
 import AdminDashboard from "./pages/AdminDashboard";
+import { Toaster } from "./components/ui/sonner";
 
 const AppContent = () => {
   const { isAdmin, loading } = useAuth();
@@ -41,10 +43,14 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ProductProvider>
-        <AppContent />
-      </ProductProvider>
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <AuthProvider>
+        <ProductProvider>
+          <AppContent />
+          {/* Mounted outside AppContent so toasts still show while auth is loading. */}
+          <Toaster position="bottom-right" richColors closeButton />
+        </ProductProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

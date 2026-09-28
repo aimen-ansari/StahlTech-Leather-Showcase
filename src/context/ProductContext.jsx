@@ -50,8 +50,8 @@ export function ProductProvider({ children }) {
       toast.success('Masterpiece Published');
       return { success: true };
     } catch (error) {
-      // Helps identify if columns like 'color' are missing
-      alert("Database Error: " + error.message);
+      // Returned to the caller, which surfaces it via toast (avoids a duplicate
+      // alert + toast for the same failure).
       return { success: false, error };
     }
   };
@@ -69,8 +69,8 @@ export function ProductProvider({ children }) {
       toast.success('Inventory Updated');
       return { success: true };
     } catch (error) {
-      toast.error('Update failed');
-      return { success: false };
+      toast.error('Update failed: ' + (error?.message || 'unknown error'));
+      return { success: false, error };
     }
   };
 
