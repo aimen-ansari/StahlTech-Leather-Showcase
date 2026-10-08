@@ -1,7 +1,6 @@
 import bullwhip1 from '@/assets/product-bullwhip-1.jpg';
 import bullwhip2 from '@/assets/product-bullwhip-2.jpg';
 import snakewhip1 from '@/assets/product-snakewhip-1.jpg';
-import stockwhip1 from '@/assets/product-stockwhip-1.jpg';
 import signalwhip1 from '@/assets/product-signalwhip-1.jpg';
 
 export const products = [
@@ -37,16 +36,6 @@ export const products = [
   },
   {
     id: 4,
-    name: "Outback Stock Whip",
-    category: "Stock Whips",
-    size: "7 ft",
-    color: "Natural Tan",
-    price: 545,
-    image: stockwhip1,
-    description: "Inspired by the Australian stockman's traditional tool, our Outback features a cane handle with brass ferrule and genuine kangaroo leather thong. The distinct two-piece design allows for powerful cracks with minimal effort."
-  },
-  {
-    id: 5,
     name: "Precision Signal Whip",
     category: "Signal Whips",
     size: "4 ft",
@@ -56,7 +45,7 @@ export const products = [
     description: "Compact yet commanding, the Precision Signal is perfect for indoor performances and close-quarters work. The shorter length provides exceptional control while still delivering satisfying cracks."
   },
   {
-    id: 6,
+    id: 5,
     name: "Maverick Bullwhip",
     category: "Bullwhips",
     size: "6 ft",
@@ -66,7 +55,7 @@ export const products = [
     description: "The Maverick is our entry point into professional-grade whips. At 6 feet, it's ideal for learning advanced techniques while still offering the craftsmanship expected from Premium Leather Whips."
   },
   {
-    id: 7,
+    id: 6,
     name: "Viper Snake Whip",
     category: "Snake Whips",
     size: "5 ft",
@@ -74,20 +63,10 @@ export const products = [
     price: 345,
     image: snakewhip1,
     description: "The Viper combines striking aesthetics with superior performance. The two-tone braiding pattern makes this whip as beautiful to look at as it is to crack."
-  },
-  {
-    id: 8,
-    name: "Drovers Stock Whip",
-    category: "Stock Whips",
-    size: "8 ft",
-    color: "Cognac",
-    price: 585,
-    image: stockwhip1,
-    description: "Built for the serious collector, the Drovers features an extended thong and reinforced keeper. The hardwood handle is hand-turned and fitted with custom brass hardware."
   }
 ];
 
-export const categories = ["All", "Bullwhips", "Snake Whips", "Stock Whips", "Signal Whips"];
+export const categories = ["All", "Bullwhips", "Snake Whips", "Signal Whips"];
 
 // Canonical categories for creating/editing products in the admin console.
 // Mirrors the storefront categories so admin and store never drift apart.

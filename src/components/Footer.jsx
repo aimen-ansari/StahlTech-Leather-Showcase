@@ -39,11 +39,6 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="transition-colors hover:text-primary">
-                  Stock Whips
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition-colors hover:text-primary">
                   Signal Whips
                 </a>
               </li>

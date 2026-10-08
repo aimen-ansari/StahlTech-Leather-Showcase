@@ -191,7 +191,6 @@ export default function CustomManufacture() {
                   <option>Custom Whip</option>
                   <option>Bullwhip</option>
                   <option>Snake Whip</option>
-                  <option>Stock Whip</option>
                   <option>Signal Whip</option>
                   <option>Accessory</option>
                 </select>
