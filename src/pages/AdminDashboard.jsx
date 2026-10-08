@@ -18,7 +18,22 @@ export default function AdminDashboard() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+
+  // Guards so the Publish button can never spin forever on a slow or stalled
+  // connection (supabase-js requests have no built-in timeout).
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const UPLOAD_TIMEOUT_MS = 60000;
+  const SAVE_TIMEOUT_MS = 30000;
+
+  const withTimeout = (promise, ms, message) => {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  };
 
   // Added color and size to initial state
   const [formData, setFormData] = useState({
@@ -58,7 +73,11 @@ export default function AdminDashboard() {
     try {
       setIsUploading(true);
       const filePath = `${Math.random()}.${file.name.split('.').pop()}`;
-      const { error } = await supabase.storage.from('product-images').upload(filePath, file);
+      const { error } = await withTimeout(
+        supabase.storage.from('product-images').upload(filePath, file),
+        UPLOAD_TIMEOUT_MS,
+        'The image upload timed out. Check your connection and try again.'
+      );
       if (error) throw error;
       const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
       return data.publicUrl;
@@ -72,11 +91,26 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isUploading || isSubmitting) return;
+
     try {
+      if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
+        toast.error(
+          `"${imageFile.name}" is ${(imageFile.size / 1048576).toFixed(1)} MB. Please choose an image under 10 MB.`
+        );
+        return;
+      }
+
       let finalImageUrl = formData.image_url;
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile);
-        if (uploadedUrl) finalImageUrl = uploadedUrl;
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+        } else if (!finalImageUrl) {
+          // Upload failed and there is no previously saved image: stop here
+          // instead of publishing a product with no picture.
+          return;
+        }
       }
 
       const productData = {
@@ -85,18 +119,30 @@ export default function AdminDashboard() {
         price: parseFloat(formData.price) || 0
       };
 
-      const result = editingProduct 
-        ? await updateProduct(editingProduct.id, productData)
-        : await addProduct(productData);
+      setIsSubmitting(true);
+      const result = editingProduct
+        ? await withTimeout(
+            updateProduct(editingProduct.id, productData),
+            SAVE_TIMEOUT_MS,
+            'Saving took too long. Check your connection and try again.'
+          )
+        : await withTimeout(
+            addProduct(productData),
+            SAVE_TIMEOUT_MS,
+            'Saving took too long. Check your connection and try again.'
+          );
 
       if (result?.error) {
         toast.error("Database Error: " + result.error.message);
       } else {
         setIsFormOpen(false);
-        toast.success(editingProduct ? "Updated" : "Published");
+        // Success toast is already fired by addProduct/updateProduct in ProductContext.
       }
     } catch (err) {
       console.error("Submission failed:", err);
+      toast.error(err?.message || 'Could not save the product. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -228,9 +274,9 @@ export default function AdminDashboard() {
                   </div>
                   <div className="pt-10 flex gap-4">
                     <button type="button" onClick={() => setIsFormOpen(false)} className="flex-1 py-4 border border-border uppercase text-[10px] tracking-widest">Cancel</button>
-                    <button type="submit" disabled={isUploading} className="flex-1 py-4 bg-primary text-primary-foreground uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
-                      {isUploading ? <Loader2 className="animate-spin h-3 w-3" /> : <Save size={14} />}
-                      {editingProduct ? 'Save Changes' : 'Publish Item'}
+                    <button type="submit" disabled={isUploading || isSubmitting} className="flex-1 py-4 bg-primary text-primary-foreground uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
+                      {(isUploading || isSubmitting) ? <Loader2 className="animate-spin h-3 w-3" /> : <Save size={14} />}
+                      {isUploading ? 'Uploading Image...' : isSubmitting ? 'Saving...' : editingProduct ? 'Save Changes' : 'Publish Item'}
                     </button>
                   </div>
                 </div>

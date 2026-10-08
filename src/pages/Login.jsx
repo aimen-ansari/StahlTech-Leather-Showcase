@@ -41,8 +41,9 @@ export default function Login() {
 
   return (
    
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen flex-col bg-background">
        <Header />
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-8 rounded-sm border border-border bg-card p-8">
         <div className="text-center">
           <Link to="/" className="font-serif text-3xl text-foreground">StahlTech Leather</Link>
@@ -73,6 +74,7 @@ export default function Login() {
           </button>
         </form>
       </motion.div>
+      </main>
     </div>
   );
 }

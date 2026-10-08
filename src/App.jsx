@@ -8,6 +8,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CustomManufacture from "./pages/CustomManufacture";
 import AdminDashboard from "./pages/AdminDashboard";
+import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
 
 const AppContent = () => {
@@ -36,6 +37,7 @@ const AppContent = () => {
           path="/admin" 
           element={isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} 
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
