@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Edit, Trash2, X, Save, LogOut, Home, Search, Upload, Loader2, LayoutDashboard
+  Plus, Edit, Trash2, X, Save, LogOut, Home, Search, Upload, Loader2, LayoutDashboard, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductContext';
 import { supabase } from '@/lib/supabase';
+import { withTimeout } from '@/lib/withTimeout';
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -20,20 +21,13 @@ export default function AdminDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [submitError, setSubmitError] = useState('');
 
   // Guards so the Publish button can never spin forever on a slow or stalled
   // connection (supabase-js requests have no built-in timeout).
   const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
   const UPLOAD_TIMEOUT_MS = 60000;
   const SAVE_TIMEOUT_MS = 30000;
-
-  const withTimeout = (promise, ms, message) => {
-    let timer;
-    const timeout = new Promise((_, reject) => {
-      timer = setTimeout(() => reject(new Error(message)), ms);
-    });
-    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-  };
 
   // Added color and size to initial state
   const [formData, setFormData] = useState({
@@ -54,6 +48,7 @@ export default function AdminDashboard() {
 
   const handleOpenForm = (product = null) => {
     setImageFile(null);
+    setSubmitError('');
     if (product) {
       setEditingProduct(product);
       setFormData({ 
@@ -92,12 +87,13 @@ export default function AdminDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isUploading || isSubmitting) return;
+    setSubmitError('');
 
     try {
       if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
-        toast.error(
-          `"${imageFile.name}" is ${(imageFile.size / 1048576).toFixed(1)} MB. Please choose an image under 10 MB.`
-        );
+        const msg = `"${imageFile.name}" is ${(imageFile.size / 1048576).toFixed(1)} MB. Please choose an image under 10 MB.`;
+        setSubmitError(msg);
+        toast.error(msg);
         return;
       }
 
@@ -109,6 +105,7 @@ export default function AdminDashboard() {
         } else if (!finalImageUrl) {
           // Upload failed and there is no previously saved image: stop here
           // instead of publishing a product with no picture.
+          setSubmitError('Image upload failed. Please choose another image and try again.');
           return;
         }
       }
@@ -133,6 +130,7 @@ export default function AdminDashboard() {
           );
 
       if (result?.error) {
+        setSubmitError("Database Error: " + result.error.message);
         toast.error("Database Error: " + result.error.message);
       } else {
         setIsFormOpen(false);
@@ -140,6 +138,7 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Submission failed:", err);
+      setSubmitError(err?.message || 'Could not save the product. Please try again.');
       toast.error(err?.message || 'Could not save the product. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -216,8 +215,15 @@ export default function AdminDashboard() {
             <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="w-full max-w-4xl bg-card border border-border p-10 rounded-sm shadow-2xl my-auto">
               <div className="flex justify-between items-center mb-10">
                 <h2 className="font-serif text-3xl">{editingProduct ? 'Update Product' : 'New Collection Item'}</h2>
-                <button onClick={() => setIsFormOpen(false)}><X size={24} /></button>
+                <button type="button" onClick={() => { setIsFormOpen(false); setSubmitError(''); }}><X size={24} /></button>
               </div>
+
+              {submitError && (
+                <div className="mb-6 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-sm flex items-start gap-2">
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <span>{submitError}</span>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
@@ -273,12 +279,19 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className="pt-10 flex gap-4">
-                    <button type="button" onClick={() => setIsFormOpen(false)} className="flex-1 py-4 border border-border uppercase text-[10px] tracking-widest">Cancel</button>
+                    <button type="button" onClick={() => { setIsFormOpen(false); setSubmitError(''); }} className="flex-1 py-4 border border-border uppercase text-[10px] tracking-widest">Cancel</button>
                     <button type="submit" disabled={isUploading || isSubmitting} className="flex-1 py-4 bg-primary text-primary-foreground uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
                       {(isUploading || isSubmitting) ? <Loader2 className="animate-spin h-3 w-3" /> : <Save size={14} />}
                       {isUploading ? 'Uploading Image...' : isSubmitting ? 'Saving...' : editingProduct ? 'Save Changes' : 'Publish Item'}
                     </button>
                   </div>
+                  {(isUploading || isSubmitting) && (
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground text-center mt-3">
+                      {isUploading
+                        ? 'Uploading image — this can take up to a minute on slow connections'
+                        : 'Saving to the database — please wait'}
+                    </p>
+                  )}
                 </div>
               </form>
             </motion.div>

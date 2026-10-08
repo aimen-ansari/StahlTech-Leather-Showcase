@@ -5,6 +5,7 @@ import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "sonner";
 import Header from '@/components/Header';
+import { withTimeout } from '@/lib/withTimeout';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,13 +17,19 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Guard so the Sign In button can never spin forever on a slow or stalled
+  // connection (supabase-js requests have no built-in timeout).
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
-      const { data, error: authError } = await login(email, password);
+      const { data, error: authError } = await withTimeout(
+        login(email, password),
+        15000,
+        'Sign-in is taking too long. Check your connection and try again.'
+      );
       
       if (authError) {
         setError(authError.message || 'Invalid credentials');
@@ -33,7 +40,7 @@ export default function Login() {
       toast.success("Access Granted. Welcome back.");
       setTimeout(() => navigate('/admin'), 500);
     } catch (err) {
-      setError('Connection error occurred.');
+      setError(err?.message || 'Connection error occurred.');
     } finally {
       setIsLoading(false);
     }

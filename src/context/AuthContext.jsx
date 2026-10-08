@@ -1,7 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { withTimeout } from '../lib/withTimeout';
 
 const AuthContext = createContext(null);
+
+// Guard so the "Verifying Secure Session" screen can never spin forever on a
+// slow or stalled connection (supabase-js requests have no built-in timeout).
+const SESSION_TIMEOUT_MS = 10000;
+const ROLE_TIMEOUT_MS = 15000;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -11,13 +17,21 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await withTimeout(
+          supabase.auth.getSession(),
+          SESSION_TIMEOUT_MS,
+          'Session check timed out.'
+        );
         if (session) {
           await checkAdminRole(session.user);
         } else {
           setLoading(false);
         }
       } catch (error) {
+        // Timed out or the session check failed: render the app anyway instead
+        // of hanging on the loading screen forever.
+        setUser(null);
+        setIsAdmin(false);
         setLoading(false);
       }
     };
@@ -39,11 +53,15 @@ export function AuthProvider({ children }) {
   async function checkAdminRole(supabaseUser) {
     try {
       setUser(supabaseUser);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', supabaseUser.id)
-        .single();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', supabaseUser.id)
+          .single(),
+        ROLE_TIMEOUT_MS,
+        'Role check timed out.'
+      );
 
       if (!error && data?.role === 'admin') {
         setIsAdmin(true);

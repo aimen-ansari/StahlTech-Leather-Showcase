@@ -11,31 +11,39 @@ export function ProductProvider({ children }) {
   useEffect(() => {
     // 1. Create the controller to handle React Strict Mode double-renders
     const controller = new AbortController();
-    
-  async function fetchProducts() {
-  try {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // 5. Hard cap so the store can never hang on a spinner forever when the
+    //    request stalls (supabase-js has no built-in timeout).
+    const timer = setTimeout(() => controller.abort(), 20000);
 
-    if (error) throw error;
-    setProducts(data || []);
-  } catch (error) {
-    // This part is crucial: it ignores the AbortError so your app keeps running
-    if (error.name !== 'AbortError') {
-      console.error('Connection failed:', error.message);
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .abortSignal(controller.signal);
+
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error) {
+        // This part is crucial: it ignores the AbortError so your app keeps running
+        if (!controller.signal.aborted && error.name !== 'AbortError') {
+          console.error('Connection failed:', error.message);
+        }
+      } finally {
+        clearTimeout(timer);
+        setLoading(false);
+      }
     }
-  } finally {
-    setLoading(false);
-  }
-}
 
     fetchProducts();
-    
+
     // 4. Cleanup: Abort the previous request if the component re-renders
-    return () => controller.abort();
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, []);
 
   const addProduct = async (newProduct) => {
