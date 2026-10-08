@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductContext';
 import { supabase } from '@/lib/supabase';
 import { withTimeout } from '@/lib/withTimeout';
+import { productCategories } from '@/data/products';
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -44,6 +45,16 @@ export default function AdminDashboard() {
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Category dropdown: the canonical storefront categories first, then any
+  // category already used by existing products (so editing an older item never
+  // silently loses its category).
+  const categoryOptions = Array.from(
+    new Set([
+      ...productCategories,
+      ...products.map(p => p.category).filter(Boolean)
+    ])
   );
 
   const handleOpenForm = (product = null) => {
@@ -236,10 +247,9 @@ export default function AdminDashboard() {
                     <div>
                       <label className="text-[10px] uppercase tracking-widest text-muted-foreground block mb-2">Category</label>
                       <select className="input-luxury w-full bg-background" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                        <option>Bullwhips</option>
-                        <option>Stockwhips</option>
-                        <option>Snake Whips</option>
-                        <option>Accessories</option>
+                        {categoryOptions.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
                       </select>
                     </div>
                     <div>

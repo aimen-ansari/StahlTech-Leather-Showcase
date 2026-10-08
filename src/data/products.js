@@ -89,6 +89,11 @@ export const products = [
 
 export const categories = ["All", "Bullwhips", "Snake Whips", "Stock Whips", "Signal Whips"];
 
+// Canonical categories for creating/editing products in the admin console.
+// Mirrors the storefront categories so admin and store never drift apart.
+// "All" is a filter, not a product category.
+export const productCategories = categories.filter((category) => category !== "All");
+
 export const heroSlides = [
   {
     id: 1,
