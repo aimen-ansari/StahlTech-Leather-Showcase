@@ -37,9 +37,17 @@ export function AuthProvider({ children }) {
     };
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // IMPORTANT: never call supabase.auth.* or run an authenticated request
+    // from inside this callback. supabase-js *awaits* auth-state callbacks
+    // while it still holds its internal auth lock, so any authenticated call
+    // made here (it needs the same lock) deadlocks until it times out — which
+    // then flips isAdmin to false and kicks a logged-in admin to /login.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        await checkAdminRole(session.user);
+        setUser(session.user);
+        // Defer the role lookup so it runs after the emit finishes and the
+        // auth lock is released.
+        setTimeout(() => checkAdminRole(session.user), 0);
       } else {
         setUser(null);
         setIsAdmin(false);
@@ -63,13 +71,16 @@ export function AuthProvider({ children }) {
         'Role check timed out.'
       );
 
-      if (!error && data?.role === 'admin') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
+      if (error) {
+        // A transient failure must NOT sign an admin out: keep the previous
+        // admin state so a flaky role check can't boot them to the login page.
+        console.error('Role check failed:', error.message);
+        return;
       }
+      setIsAdmin(data?.role === 'admin');
     } catch (err) {
-      setIsAdmin(false);
+      // Timeout or network error: keep the last known state instead of logging out.
+      console.error('Role check error:', err?.message || err);
     } finally {
       setLoading(false); // Fixes the infinite loading pulse
     }
