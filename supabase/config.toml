@@ -1,0 +1,7 @@
+# Supabase CLI configuration for this project.
+project_id = "ogiqwnyubonpkqmyzwxj"
+
+# Public contact form: visitors submit with the anon key, which is a valid JWT,
+# so JWT verification stays on.
+[functions.send-contact-inquiry]
+verify_jwt = true

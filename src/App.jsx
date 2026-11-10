@@ -9,6 +9,7 @@ import Contact from "./pages/Contact";
 import CustomManufacture from "./pages/CustomManufacture";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import WhatsAppButton from "./components/WhatsAppButton";
 import { Toaster } from "./components/ui/sonner";
 
 const AppContent = () => {
@@ -39,6 +40,7 @@ const AppContent = () => {
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <WhatsAppButton />
     </BrowserRouter>
   );
 };

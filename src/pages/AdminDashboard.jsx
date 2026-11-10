@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductContext';
+import InquiriesPanel from '@/components/admin/InquiriesPanel';
 import { supabase } from '@/lib/supabase';
 import { withTimeout } from '@/lib/withTimeout';
 import { productCategories } from '@/data/products';
@@ -23,6 +24,34 @@ export default function AdminDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [submitError, setSubmitError] = useState('');
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Keep the Inquiries tab badge populated even before the inbox is opened.
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+
+    let cancelled = false;
+
+    const loadUnreadCount = async () => {
+      const { count, error } = await supabase
+        .from('contact_inquiries')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_read', false);
+
+      if (cancelled) return;
+      if (error) {
+        console.error('Failed to load unread inquiry count:', error.message);
+        return;
+      }
+      setUnreadCount(count ?? 0);
+    };
+
+    loadUnreadCount();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin]);
 
   // Guards so the Publish button can never spin forever on a slow or stalled
   // connection (supabase-js requests have no built-in timeout).
@@ -175,49 +204,85 @@ export default function AdminDashboard() {
       </nav>
 
       <main className="container mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-          <div className="bg-card p-6 border border-border rounded-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">Total Pieces</p>
-            <p className="text-4xl font-serif text-primary">{products.length}</p>
-          </div>
-          <div className="md:col-span-3 flex items-end justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input 
-                type="text" placeholder="Search Inventory..." 
-                className="input-luxury pl-10 w-full"
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button onClick={() => handleOpenForm()} className="btn-luxury flex items-center gap-2">
-              <Plus size={20} /> Add Masterpiece
-            </button>
-          </div>
+        <div className="mb-8 flex items-center gap-2 border-b border-border">
+          <button
+            type="button"
+            onClick={() => setActiveTab('inventory')}
+            className={`-mb-px border-b-2 px-5 py-3 text-[11px] uppercase tracking-[0.2em] transition-colors ${
+              activeTab === 'inventory'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Inventory
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('inquiries')}
+            className={`-mb-px flex items-center gap-2 border-b-2 px-5 py-3 text-[11px] uppercase tracking-[0.2em] transition-colors ${
+              activeTab === 'inquiries'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Inquiries
+            {unreadCount > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Product Cards show color/size if available */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="group bg-card border border-border rounded-sm overflow-hidden transition-all hover:border-primary/40 shadow-sm">
-              <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                <img src={product.image_url || '/placeholder.svg'} alt={product.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button onClick={() => handleOpenForm(product)} className="p-2 bg-background/90 rounded-full hover:text-primary"><Edit size={18} /></button>
-                  <button onClick={() => deleteProduct(product.id)} className="p-2 bg-background/90 rounded-full hover:text-destructive"><Trash2 size={18} /></button>
-                </div>
+        {activeTab === 'inventory' ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+              <div className="bg-card p-6 border border-border rounded-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">Total Pieces</p>
+                <p className="text-4xl font-serif text-primary">{products.length}</p>
               </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-serif text-xl">{product.name}</h3>
-                  <span className="text-primary font-medium tracking-tight">${product.price}</span>
+              <div className="md:col-span-3 flex items-end justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input 
+                    type="text" placeholder="Search Inventory..." 
+                    className="input-luxury pl-10 w-full"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  {product.category} {product.color ? `• ${product.color}` : ''} {product.size ? `• ${product.size}` : ''}
-                </p>
+                <button onClick={() => handleOpenForm()} className="btn-luxury flex items-center gap-2">
+                  <Plus size={20} /> Add Masterpiece
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Product Cards show color/size if available */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="group bg-card border border-border rounded-sm overflow-hidden transition-all hover:border-primary/40 shadow-sm">
+                  <div className="aspect-[3/4] relative overflow-hidden bg-muted">
+                    <img src={product.image_url || '/placeholder.svg'} alt={product.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button onClick={() => handleOpenForm(product)} className="p-2 bg-background/90 rounded-full hover:text-primary"><Edit size={18} /></button>
+                      <button onClick={() => deleteProduct(product.id)} className="p-2 bg-background/90 rounded-full hover:text-destructive"><Trash2 size={18} /></button>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-serif text-xl">{product.name}</h3>
+                      <span className="text-primary font-medium tracking-tight">${product.price}</span>
+                    </div>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                      {product.category} {product.color ? `• ${product.color}` : ''} {product.size ? `• ${product.size}` : ''}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <InquiriesPanel onUnreadCountChange={setUnreadCount} />
+        )}
       </main>
 
       <AnimatePresence>
